@@ -1,14 +1,14 @@
 ---
-import { Icon } from 'astro-icon/components';
-import DisplaySettings from "./widget/DisplaySettings.svelte";
-import {LinkPreset, NavBarLink} from "../types/config";
-import {navBarConfig, siteConfig} from "../config";
-import NavMenuPanel from "./widget/NavMenuPanel.astro";
-import Search from "./Search.svelte";
-import {LinkPresets} from "../constants/link-presets";
-import LightDarkSwitch from "./LightDarkSwitch.svelte";
-import {url} from "../utils/url-utils";
-const className = Astro.props.class;
+import { Icon } from 'astro-icon/components'
+import { navBarConfig, siteConfig } from '../config'
+import { LinkPresets } from '../constants/link-presets'
+import type { LinkPreset, NavBarLink } from '../types/config'
+import { url } from '../utils/url-utils'
+import LightDarkSwitch from './LightDarkSwitch.svelte'
+import Search from './Search.svelte'
+import DisplaySettings from './widget/DisplaySettings.svelte'
+import NavMenuPanel from './widget/NavMenuPanel.svelte'
+const className = Astro.props.class
 
 let links: NavBarLink[] = navBarConfig.links.map((item: NavBarLink | LinkPreset): NavBarLink => {
     if (typeof item === "number") {
@@ -16,7 +16,6 @@ let links: NavBarLink[] = navBarConfig.links.map((item: NavBarLink | LinkPreset)
     }
     return item;
 });
-
 ---
 <div class:list={[
     className,
@@ -57,7 +56,20 @@ let links: NavBarLink[] = navBarConfig.links.map((item: NavBarLink | LinkPreset)
             <Icon name="material-symbols:menu-rounded" size={"1.25rem"}></Icon>
         </button>
     </div>
-    <NavMenuPanel links={links}></NavMenuPanel>
+    <NavMenuPanel links={links}
+        client:load
+        >
+        <Icon 
+            slot="icon-link-external"
+            name="fa6-solid:arrow-up-right-from-square"
+            class="transition text-black/25 dark:text-white/25 -translate-x-1" size="12"
+        />
+        <Icon 
+            slot="icon-link-normal"
+            name="material-symbols:chevron-right-rounded"
+            class="transition text-[var(--primary)]" size="20"
+        />
+    </NavMenuPanel>
     <DisplaySettings client:only="svelte">
         <Icon slot="restore-icon" name="fa6-solid:arrow-rotate-left" size={"0.875rem"} class=""></Icon>
     </DisplaySettings>
