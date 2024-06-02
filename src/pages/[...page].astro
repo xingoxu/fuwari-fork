@@ -1,23 +1,54 @@
 ---
-import MainGridLayout from '../layouts/MainGridLayout.astro'
-import PostCard from '../components/PostCard.astro'
-import Pagination from '../components/control/Pagination.astro'
-import { getSortedPosts } from '../utils/content-utils'
-import { getPostUrlBySlug } from '../utils/url-utils'
-import { PAGE_SIZE } from '../constants/constants'
-import PostPage from '../components/PostPage.astro'
+import { siteConfig } from '@/config';
+import IndexPage from '@components/IndexPage/index.astro';
+import PostPage from '@components/PostPage/index.astro';
+import { getSortedPosts } from '@utils/content-utils';
+import type { GetStaticPaths } from 'astro';
+import { format } from 'date-fns';
 
-export async function getStaticPaths({ paginate }) {
-  const allBlogPosts = await getSortedPosts()
-  return paginate(allBlogPosts, { pageSize: PAGE_SIZE })
-}
+export const getStaticPaths = (async ({
+  paginate,
+}) => {
+  const allBlogPosts = await getSortedPosts();
+  const indexPagiPosts = await getSortedPosts(
+    siteConfig.lang,
+  );
+  // biome-ignore lint/style/noNonNullAssertion: <explanation>
+  const indexPage = paginate(indexPagiPosts, {
+    pageSize: 10,
+  }).find(
+    page => page.params.page === undefined,
+  )!;
 
-const { page } = Astro.props
+  return [
+    indexPage,
+    ...indexPagiPosts.map(
+      (entry, index, array) => ({
+        params: {
+          page: `${format(
+            entry.data.published,
+            'yyyy/MM',
+          )}/${entry.slug}`,
+        },
+        props: {
+          entry,
+          prevEntry: array[index - 1],
+          nextEntry: array[index + 1],
+        },
+      }),
+    ),
+  ];
+}) satisfies GetStaticPaths;
 
-const len = page.data.length
+const {
+  entry,
+  prevEntry,
+  nextEntry,
+  page: indexPage,
+} = Astro.props;
 ---
 
-<MainGridLayout>
-    <PostPage page={page}></PostPage>
-    <Pagination class="mx-auto onload-animation" page={page} style=`animation-delay: calc(var(--content-delay) + ${(len)*50}ms)`></Pagination>
-</MainGridLayout>
+{indexPage && <IndexPage page={indexPage} />}
+
+{entry && <PostPage entry={entry} prevEntry={prevEntry} nextEntry={nextEntry} />}
+

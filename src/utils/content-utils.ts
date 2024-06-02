@@ -1,41 +1,54 @@
-import { getCollection } from 'astro:content'
-import I18nKey from '@i18n/i18nKey'
-import { i18n } from '@i18n/translation'
-import MarkdownIt from 'markdown-it'
+import { getCollection } from 'astro:content';
+import { siteConfig } from '@/config';
+import I18nKey from '@i18n/i18nKey';
+import { i18n } from '@i18n/translation';
+import MarkdownIt from 'markdown-it';
 
-export async function getSortedPosts() {
-  const allBlogPosts = await getCollection(
+export async function getSortedPosts(
+  lang?: string,
+) {
+  let allBlogPosts = await getCollection(
     'posts',
     ({ data }) => {
       return import.meta.env.PROD
         ? data.draft !== true
-        : true
+        : true;
     },
-  )
+  );
+  if (lang === siteConfig.lang) {
+    allBlogPosts = allBlogPosts.filter(
+      post => !post.slug.includes('/'),
+    );
+  } else if (lang) {
+    allBlogPosts = allBlogPosts.filter(post =>
+      post.slug.startsWith(`${lang}/`),
+    );
+  }
+
   const sorted = allBlogPosts.sort((a, b) => {
-    const dateA = new Date(a.data.published)
-    const dateB = new Date(b.data.published)
-    return dateA > dateB ? -1 : 1
-  })
+    const dateA = new Date(a.data.published);
+    const dateB = new Date(b.data.published);
+    return dateA > dateB ? -1 : 1;
+  });
 
   for (let i = 1; i < sorted.length; i++) {
-    sorted[i].data.nextSlug = sorted[i - 1].slug
+    sorted[i].data.nextSlug = sorted[i - 1].slug;
     sorted[i].data.nextTitle =
-      sorted[i - 1].data.title
+      sorted[i - 1].data.title;
   }
   for (let i = 0; i < sorted.length - 1; i++) {
-    sorted[i].data.prevSlug = sorted[i + 1].slug
+    sorted[i].data.prevSlug = sorted[i + 1].slug;
     sorted[i].data.prevTitle =
-      sorted[i + 1].data.title
+      sorted[i + 1].data.title;
   }
 
-  return sorted
+  return sorted;
 }
 
 export type Tag = {
-  name: string
-  count: number
-}
+  name: string;
+  count: number;
+};
 
 export async function getTagList(): Promise<
   Tag[]
@@ -45,17 +58,17 @@ export async function getTagList(): Promise<
     ({ data }) => {
       return import.meta.env.PROD
         ? data.draft !== true
-        : true
+        : true;
     },
-  )
+  );
 
-  const countMap: { [key: string]: number } = {}
+  const countMap: { [key: string]: number } = {};
   allBlogPosts.map(post => {
-    ;(post.data.tags || []).map((tag: string) => {
-      if (!countMap[tag]) countMap[tag] = 0
-      countMap[tag]++
-    })
-  })
+    (post.data.tags || []).map((tag: string) => {
+      if (!countMap[tag]) countMap[tag] = 0;
+      countMap[tag]++;
+    });
+  });
 
   // sort tags
   const keys: string[] = Object.keys(
@@ -63,19 +76,19 @@ export async function getTagList(): Promise<
   ).sort((a, b) => {
     return a
       .toLowerCase()
-      .localeCompare(b.toLowerCase())
-  })
+      .localeCompare(b.toLowerCase());
+  });
 
   return keys.map(key => ({
     name: key,
     count: countMap[key],
-  }))
+  }));
 }
 
 export type Category = {
-  name: string
-  count: number
-}
+  name: string;
+  count: number;
+};
 
 export async function getCategoryList(): Promise<
   Category[]
@@ -85,39 +98,39 @@ export async function getCategoryList(): Promise<
     ({ data }) => {
       return import.meta.env.PROD
         ? data.draft !== true
-        : true
+        : true;
     },
-  )
-  const count: { [key: string]: number } = {}
+  );
+  const count: { [key: string]: number } = {};
   allBlogPosts.map(post => {
     if (!post.data.category) {
-      const ucKey = i18n(I18nKey.uncategorized)
+      const ucKey = i18n(I18nKey.uncategorized);
       count[ucKey] = count[ucKey]
         ? count[ucKey] + 1
-        : 1
-      return
+        : 1;
+      return;
     }
     count[post.data.category] = count[
       post.data.category
     ]
       ? count[post.data.category] + 1
-      : 1
-  })
+      : 1;
+  });
 
   const lst = Object.keys(count).sort((a, b) => {
     return a
       .toLowerCase()
-      .localeCompare(b.toLowerCase())
-  })
+      .localeCompare(b.toLowerCase());
+  });
 
-  const ret: Category[] = []
+  const ret: Category[] = [];
   for (const c of lst) {
-    ret.push({ name: c, count: count[c] })
+    ret.push({ name: c, count: count[c] });
   }
-  return ret
+  return ret;
 }
 
-const parser = new MarkdownIt()
+const parser = new MarkdownIt();
 // return exerpt if there's <!-- more -->
 // or return null
 export function getContentExerpt(
@@ -125,8 +138,8 @@ export function getContentExerpt(
 ) {
   const splittedContent = content.split(
     '<!-- more -->',
-  )
+  );
   if (splittedContent.length >= 2)
-    return parser.render(splittedContent[0])
-  return null
+    return parser.render(splittedContent[0]);
+  return null;
 }

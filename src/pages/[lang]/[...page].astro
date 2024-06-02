@@ -1,0 +1,68 @@
+---
+import IndexPage from '@components/IndexPage/index.astro';
+import PostPage from '@components/PostPage/index.astro';
+import { map as TranslationMap } from '@i18n/translation';
+import { getSortedPosts } from '@utils/content-utils';
+import type { GetStaticPaths } from 'astro';
+import { format } from 'date-fns';
+
+export const getStaticPaths = (async ({
+  paginate,
+}) => {
+  const languageTags = Object.keys(
+    TranslationMap,
+  );
+  const result = await Promise.all(
+    languageTags.map(async lang => {
+      const allBlogPosts =
+        await getSortedPosts(lang);
+      if (allBlogPosts.length <= 0) return [];
+
+      const indexPage = paginate(allBlogPosts, {
+        pageSize: 10,
+        params: {
+          lang,
+        },
+      }).find(
+        page => page.params.page === undefined,
+      );
+
+      return [
+        ...(indexPage ? [indexPage] : []),
+        ...allBlogPosts.map(
+          (entry, index, array) => ({
+            params: {
+              page: `${format(
+                entry.data.published,
+                'yyyy/MM',
+              )}/${entry.slug.split('/')[1]}`,
+              lang,
+            },
+            props: {
+              entry,
+              prevEntry: array[index - 1],
+              nextEntry: array[index + 1],
+            },
+          }),
+        ),
+      ];
+    }),
+  );
+  return result.flatMap(r => r);
+}) satisfies GetStaticPaths;
+
+const {
+  entry,
+  prevEntry,
+  nextEntry,
+  page: indexPage,
+} = Astro.props;
+---
+
+{indexPage && <IndexPage page={indexPage} />}
+
+{
+  entry && (
+    <PostPage entry={entry} prevEntry={prevEntry} nextEntry={nextEntry} />
+  )
+}

@@ -1,20 +1,21 @@
 ---
-import MiddleDot from '@components/atom/middle-dot.astro'
-import { Icon } from 'astro-icon/components'
-import I18nKey from '../i18n/i18nKey'
-import { i18n } from '../i18n/translation'
-import { formatDateToYYYYMMDD } from '../utils/date-utils'
-import { url } from '../utils/url-utils'
+import MiddleDot from '@components/atom/middle-dot.astro';
+import { Icon } from 'astro-icon/components';
+import I18nKey from '../i18n/i18nKey';
+import { i18n } from '../i18n/translation';
+import { formatDateToYYYYMMDD } from '../utils/date-utils';
+import { url } from '../utils/url-utils';
 
 interface Props {
-  class: string
-  published: Date
-  tags: string[]
-  category: string
+  class?: string;
+  published: Date;
+  tags?: string[];
+  category?: string;
 }
-const { published, tags, category } = Astro.props
-const className = Astro.props.class
-const hideIconWhenMobileClass = `!hidden md:!flex`
+const { published, tags, category } = Astro.props;
+const className = Astro.props.class;
+const hideIconWhenMobileClass =
+  '!hidden md:!flex';
 ---
 
 <div class:list={["flex flex-wrap text-neutral-500 dark:text-neutral-400 items-center gap-4 gap-x-4 md:gap-y-2", className]}>
@@ -35,7 +36,7 @@ const hideIconWhenMobileClass = `!hidden md:!flex`
         </div>
         <div class="flex flex-row flex-nowrap items-center">
             <MiddleDot></MiddleDot>
-            <div><a href={url(`/archive/category/${category || 'uncategorized'}/`)} aria-label=`View all posts in the ${category} category`
+            <div><a href={url(`/archive/category/${category || 'uncategorized'}/`)} aria-label={`View all posts in the ${category} category`}
                class="link-lg transition text-50 text-sm font-medium
                             hover:text-[var(--primary)] dark:hover:text-[var(--primary)] whitespace-nowrap">
                 {category || i18n(I18nKey.uncategorized)}
